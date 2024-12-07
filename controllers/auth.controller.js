@@ -274,3 +274,175 @@ export const verifyOtp = async (req, res) => {
     });
   }
 };
+
+export const sendResetOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "No user found with this data!",
+      });
+    }
+
+    const resetOtp = Math.floor(100000 + Math.random() * 900000);
+    console.log(resetOtp);
+
+    user.resetOtp = resetOtp;
+    user.resetOtpExpiresAt = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    const emailCon = {
+      email: user.email,
+      subject: "Password reset request",
+      text: `Welcome to MERN AUTH! Your account is created with this email; Thanks for being with us!`,
+      html: `
+    <div
+      style="
+        border: 1px solid rgb(9, 57, 120);
+        width: 400px;
+        margin: 0 auto;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+      "
+    >
+      <h2>Hi user!</h2>
+      <p style="font-size: 16px; margin-top: 20px; text-align: justify ; font-family: 'Poppins', sans-serif; font-weight: 400">
+       We've receive a request to reset your password. Please use the following OTP to reset your password. OTP is valid for 10 minutes. If you didn't request for password reset, you can safely ignore this email.
+    <br/> <br/> 
+    OTP is:
+      </p>
+      <p
+        style="
+          background-color: rgb(26, 160, 100);
+          color: #fff;
+          padding: 20px;
+          border-radius: 10px;
+          font-size: 32px;
+          text-align: center;
+          font-weight: bold;
+          letter-spacing: 9px;
+        "
+      >
+        ${resetOtp}
+      </p>
+
+      <p style="font-size: 16px; margin-top: 40px">
+        Thank you for being with us.
+      </p>
+
+      <p style="font-size: 16px; line-height: 25px">
+        Best wishes, <br />
+        MERN-AUTH Team
+      </p>
+    </div>
+`,
+    };
+
+    await sendMsg(emailCon);
+
+    res.json({
+      success: true,
+      message: "Password Reset Email sent successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong!",
+    });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, resetOtp, newPassword } = req.body;
+
+    if (!email || !resetOtp || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Email, OTP and New Password are required",
+      });
+    }
+
+    const user = await UserModel.findOne({ email });
+
+    if (!user) {
+      return res.json({
+        status: false,
+        message: "No user found with this data!",
+      });
+    }
+
+    if (user.resetOtpExpiresAt < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Reset OTP Expired!",
+      });
+    }
+
+    if (resetOtp == "" || resetOtp !== user.resetOtp) {
+      return res.json({
+        success: false,
+        message: "Invalid OTP",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    user.password = hashedPassword;
+    user.resetOtp = "";
+    user.resetOtpExpiresAt = 0;
+
+    await user.save();
+
+    const emailCon = {
+      email: user.email,
+      subject: "Password Changed",
+      text: `Welcome to MERN AUTH! Your account is created with this email; Thanks for being with us!`,
+      html: `
+    <div
+      style="
+        border: 1px solid rgb(9, 57, 120);
+        width: 400px;
+        margin: 0 auto;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+      "
+    >
+      <h2>Hi ${user.name}!</h2>
+      <p style="font-size: 18px; margin-top: 20px; text-align: justify ; font-family: 'Poppins', sans-serif; font-weight: 400">
+       You've successfully changed your password. You can now login with your new password.
+      </p>
+
+      <p style="font-size: 16px; margin-top: 40px">
+        Thank you for being with us.
+      </p>
+
+      <p style="font-size: 16px; line-height: 25px">
+        Best wishes, <br />
+        MERN-AUTH Team
+      </p>
+    </div>
+`,
+    };
+
+    await sendMsg(emailCon);
+
+    res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong!",
+    });
+  }
+};

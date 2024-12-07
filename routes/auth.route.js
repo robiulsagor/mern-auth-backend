@@ -3,6 +3,8 @@ import {
   login,
   logout,
   register,
+  resetPassword,
+  sendResetOtp,
   sendVerifyOtp,
   verifyOtp,
 } from "../controllers/auth.controller.js";
@@ -15,5 +17,7 @@ router.post("/login", login);
 router.get("/logout", logout);
 router.post("/send-otp", checkAuth, sendVerifyOtp);
 router.post("/verify-otp", checkAuth, verifyOtp);
+router.post("/send-reset-otp", checkAuth, sendResetOtp);
+router.post("/reset-password", checkAuth, resetPassword);
 
 export default router;

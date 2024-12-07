@@ -1,8 +1,8 @@
 import sgMail from "@sendgrid/mail";
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
 const sendMsg = async (data) => {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
   const msg = {
     from: "sagor2.me@outlook.com",
     to: data.email,
@@ -12,11 +12,10 @@ const sendMsg = async (data) => {
 
   try {
     await sgMail.send(msg);
-    console.log("successss");
+    console.log("Email Sent ");
   } catch (error) {
-    console.log("failed");
+    console.log("failed ", error);
   }
 };
 
-// sendMsg("robiul100.me@gmail.com", "Test mail by send grid");
 export default sendMsg;
