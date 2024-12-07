@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./config/mongodb.js";
 
 import authRoute from "./routes/auth.route.js";
+import userRoute from "./routes/user.route.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(cookieParser());
 app.use(cors({ credentials: true }));
 
 app.use("/api/auth", authRoute);
+app.use("/api/user", userRoute);
 
 app.get("/", (req, res) => {
   res.json({ msg: "Route is working perfectly!" });

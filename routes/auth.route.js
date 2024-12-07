@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  isAuthenticated,
   login,
   logout,
   register,
@@ -19,5 +20,5 @@ router.post("/send-otp", checkAuth, sendVerifyOtp);
 router.post("/verify-otp", checkAuth, verifyOtp);
 router.post("/send-reset-otp", checkAuth, sendResetOtp);
 router.post("/reset-password", checkAuth, resetPassword);
-
+router.get("/is-auth", checkAuth, isAuthenticated);
 export default router;

@@ -419,7 +419,7 @@ export const resetPassword = async (req, res) => {
       "
     >
       <h2>Hi ${user.name}!</h2>
-      <p style="font-size: 18px; margin-top: 20px; text-align: justify ; font-family: 'Poppins', sans-serif; font-weight: 400">
+      <p style="font-size: 16px; margin-top: 20px; text-align: justify ; font-family: 'Poppins', sans-serif; font-weight: 400">
        You've successfully changed your password. You can now login with your new password.
       </p>
 
@@ -445,4 +445,10 @@ export const resetPassword = async (req, res) => {
       message: error.message || "Something went wrong!",
     });
   }
+};
+
+export const isAuthenticated = async (req, res) => {
+  res.json({
+    success: true,
+  });
 };
