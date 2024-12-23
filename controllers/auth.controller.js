@@ -60,7 +60,7 @@ export const register = async (req, res) => {
         secure: process.env.NODE_ENV === "production" ? "none" : "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ user, token });
+      .json({ success: true, user, token });
   } catch (error) {
     console.log(error);
 
@@ -95,19 +95,21 @@ export const login = async (req, res) => {
     if (!matchPassword) {
       return res.status(400).json({
         success: false,
-        message: "User pass error!",
+        message: "User credentials error!",
       });
     }
 
     const token = generateToken(user);
-    res
-      .cookie("token", token, {
-        httpOnly: true,
-        sameSite: process.env.NODE_ENV === "production",
-        secure: process.env.NODE_ENV === "production" ? "none" : "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      })
-      .json({ success: true, user, token });
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      sameSite: "none",
+      secure: true, // For HTTPS (use false in local development)
+      path: "/", // Ensure cookie is sent for all routes
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ success: true, user, token });
   } catch (error) {
     console.log(error);
     res.json({
@@ -131,13 +133,13 @@ export const sendVerifyOtp = async (req, res) => {
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
       return res.json({
-        status: false,
+        success: false,
         message: "No user found with this data!",
       });
     }
 
     if (user.isAccountVerified) {
-      return res.json({ status: false, message: "Already verified!" });
+      return res.json({ success: false, message: "Already verified!" });
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000);
@@ -225,7 +227,7 @@ export const verifyOtp = async (req, res) => {
 
     if (!otp) {
       return res.json({
-        status: false,
+        success: false,
         message: "Missing OTP!",
       });
     }
@@ -233,25 +235,25 @@ export const verifyOtp = async (req, res) => {
     const user = await UserModel.findOne({ _id: userId });
     if (!user) {
       return res.json({
-        status: false,
+        success: false,
         message: "No user found with this data!",
       });
     }
 
     if (user.isAccountVerified) {
-      return res.json({ status: false, message: "Already verified!" });
+      return res.json({ success: false, message: "Already verified!" });
     }
 
     if (user.verifyOtpExpiresAt < Date.now()) {
       return res.json({
-        status: false,
+        success: false,
         message: "Verification token expired!",
       });
     }
 
     if (otp !== user.verifyOtp) {
       return res.json({
-        status: false,
+        success: false,
         message: "OTP not matched!",
       });
     }
@@ -283,7 +285,7 @@ export const sendResetOtp = async (req, res) => {
 
     if (!user) {
       return res.json({
-        status: false,
+        success: false,
         message: "No user found with this data!",
       });
     }
@@ -363,6 +365,7 @@ export const sendResetOtp = async (req, res) => {
 export const resetPassword = async (req, res) => {
   try {
     const { email, resetOtp, newPassword } = req.body;
+    console.log(req.body);
 
     if (!email || !resetOtp || !newPassword) {
       return res.status(400).json({
@@ -375,7 +378,7 @@ export const resetPassword = async (req, res) => {
 
     if (!user) {
       return res.json({
-        status: false,
+        success: false,
         message: "No user found with this data!",
       });
     }

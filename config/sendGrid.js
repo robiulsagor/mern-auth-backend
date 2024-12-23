@@ -12,9 +12,9 @@ const sendMsg = async (data) => {
 
   try {
     await sgMail.send(msg);
-    console.log("Email Sent ");
   } catch (error) {
-    console.log("failed ", error);
+    console.log("mail send error ", error);
+    throw new Error("Failed to send email");
   }
 };
 
